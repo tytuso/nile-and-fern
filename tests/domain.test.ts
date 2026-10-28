@@ -1,0 +1,15 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { csvCell, validateEnquiry } from '../src/domain.ts';
+const good={kind:'trip',journey:'forest-and-lake',destinations:['bwindi','bunyonyi'],month:'2027-02',flexible:false,days:5,adults:2,children:0,budget:'Still exploring',comfort:'Boutique',name:'Alex Demo',email:'alex.demo@example.com',phone:'',country:'Uganda',message:'A fictional test journey.',consent:true,website:''};
+const now=new Date('2026-10-28T12:00:00Z');
+test('accepts a complete sample trip enquiry',()=>assert.equal(validateEnquiry(good,now),''));
+test('accepts flexible dates without a month',()=>assert.equal(validateEnquiry({...good,flexible:true,month:''},now),''));
+test('a question needs no trip configuration',()=>assert.equal(validateEnquiry({...good,kind:'question',destinations:[],journey:'custom'},now),''));
+test('rejects destination injection and duplicate destinations',()=>{assert.notEqual(validateEnquiry({...good,destinations:['unlisted-place']},now),'');assert.notEqual(validateEnquiry({...good,destinations:['bwindi','bwindi']},now),'');assert.notEqual(validateEnquiry({...good,destinations:'bwindi'},now),'');});
+test('rejects unlisted journey or budget values',()=>{assert.notEqual(validateEnquiry({...good,journey:'fake'},now),'');assert.notEqual(validateEnquiry({...good,budget:'unlimited'},now),'');});
+test('rejects invalid dates, past dates and distant dates',()=>{for(const month of ['2027-13','2026-09','2031-01'])assert.notEqual(validateEnquiry({...good,month},now),'');});
+test('rejects invalid or oversized groups',()=>{assert.notEqual(validateEnquiry({...good,adults:0},now),'');assert.notEqual(validateEnquiry({...good,adults:'2'},now),'');assert.notEqual(validateEnquiry({...good,children:9},now),'');assert.notEqual(validateEnquiry({...good,days:2.5},now),'');});
+test('rejects missing consent and honeypot submissions',()=>{assert.notEqual(validateEnquiry({...good,consent:false},now),'');assert.notEqual(validateEnquiry({...good,consent:'true'},now),'');assert.notEqual(validateEnquiry({...good,website:'spam.example'},now),'');});
+test('validates contact boundaries and message size',()=>{assert.notEqual(validateEnquiry({...good,email:'bad-address'},now),'');assert.notEqual(validateEnquiry({...good,name:'A'},now),'');assert.notEqual(validateEnquiry({...good,message:'a'.repeat(2001)},now),'');assert.notEqual(validateEnquiry({...good,phone:'unusable'},now),'');});
+test('CSV export neutralises formulas and quotes data correctly',()=>{assert.equal(csvCell('=1+1'),'"\'=1+1"');assert.equal(csvCell(' +SUM(A1)'),'"\' +SUM(A1)"');assert.equal(csvCell('Alex "Demo"'),'"Alex ""Demo"""');});

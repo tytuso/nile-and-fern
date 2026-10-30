@@ -59,3 +59,7 @@ Eight real Uganda photographs are licensed from Unsplash. See `ASSET-CREDITS.md`
 - The PWA manifest and cache preparation are checked by the build. Native installation has not been performed on a physical phone.
 
 `qa/`, local dependencies, production build output and the responsive QA helper are excluded from the deliverable source and production deployment.
+
+## Black November design revision
+
+The showcase now has an independent visual identity for each category, including a persistent dark/light theme switch. Theme preference is stored only in this browser. Navigation, content and existing demo interactions remain available. No new database setup is required for this design revision.
